@@ -190,6 +190,15 @@ const HomeScreen = ({ navigation }) => {
           </Card>
         )}
       </ScrollView>
+
+      {/* Floating Chatbot Button */}
+      <TouchableOpacity
+        style={styles.chatbotButton}
+        onPress={() => navigation.navigate('Chatbot')}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.chatbotIcon}>🤖</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -332,6 +341,28 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: typography.fontSize.base,
     color: colors.textSecondary,
+  },
+  chatbotButton: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  chatbotIcon: {
+    fontSize: 32,
   },
 });
 

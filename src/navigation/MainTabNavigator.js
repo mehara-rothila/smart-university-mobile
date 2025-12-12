@@ -7,6 +7,7 @@ import AchievementsNavigator from './AchievementsNavigator';
 import LostFoundNavigator from './LostFoundNavigator';
 import BooksNavigator from './BooksNavigator';
 import ProfileNavigator from './ProfileNavigator';
+import ChatbotNavigator from './ChatbotNavigator';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 
@@ -108,6 +109,15 @@ const MainTabNavigator = () => {
           tabBarIcon: ({ color, size }) => (
             <Text style={{ fontSize: size, color }}>👤</Text>
           ),
+        }}
+      />
+
+      {/* Chatbot - Hidden from tab bar, accessible via floating button */}
+      <Tab.Screen
+        name="Chatbot"
+        component={ChatbotNavigator}
+        options={{
+          tabBarButton: () => null, // Hide from tab bar
         }}
       />
     </Tab.Navigator>
