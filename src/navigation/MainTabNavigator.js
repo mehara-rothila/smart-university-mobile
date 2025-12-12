@@ -2,6 +2,8 @@ import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/home/HomeScreen';
+import EventsNavigator from './EventsNavigator';
+import AchievementsNavigator from './AchievementsNavigator';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
@@ -16,14 +18,7 @@ const MainTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={{
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: colors.primary,
-        },
-        headerTintColor: colors.white,
-        headerTitleStyle: {
-          fontWeight: typography.fontWeight.semiBold,
-        },
+        headerShown: false, // Hide tab bar headers, stack navigators have their own
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.gray400,
         tabBarStyle: {
@@ -41,37 +36,66 @@ const MainTabNavigator = () => {
       }}
     >
       <Tab.Screen
-        name="Home"
+        name="HomeTab"
         component={HomeScreen}
         options={{
           title: 'Home',
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: colors.primary,
+          },
+          headerTintColor: colors.white,
+          headerTitleStyle: {
+            fontWeight: typography.fontWeight.semiBold,
+          },
           tabBarIcon: ({ color, size }) => (
-            <HomeIcon color={color} size={size} />
+            <Text style={{ fontSize: size, color }}>🏠</Text>
           ),
         }}
       />
 
       <Tab.Screen
-        name="Profile"
+        name="Events"
+        component={EventsNavigator}
+        options={{
+          title: 'Events',
+          tabBarIcon: ({ color, size }) => (
+            <Text style={{ fontSize: size, color }}>📅</Text>
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="Achievements"
+        component={AchievementsNavigator}
+        options={{
+          title: 'Achievements',
+          tabBarIcon: ({ color, size }) => (
+            <Text style={{ fontSize: size, color }}>🏆</Text>
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="ProfileTab"
         component={ProfileScreen}
         options={{
           title: 'Profile',
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: colors.primary,
+          },
+          headerTintColor: colors.white,
+          headerTitleStyle: {
+            fontWeight: typography.fontWeight.semiBold,
+          },
           tabBarIcon: ({ color, size }) => (
-            <ProfileIcon color={color} size={size} />
+            <Text style={{ fontSize: size, color }}>👤</Text>
           ),
         }}
       />
     </Tab.Navigator>
   );
 };
-
-// Simple icon components (using emoji for now)
-const HomeIcon = ({ color, size }) => (
-  <Text style={{ fontSize: size, color }}>🏠</Text>
-);
-
-const ProfileIcon = ({ color, size }) => (
-  <Text style={{ fontSize: size, color }}>👤</Text>
-);
 
 export default MainTabNavigator;
