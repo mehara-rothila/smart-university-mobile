@@ -1,84 +1,194 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
-import Button from '../../components/common/Button';
+import { getUpcomingEvents } from '../../api/events';
+import { getCurrentWeather } from '../../api/weather';
+import { getUserNotifications } from '../../api/notifications';
 import Card from '../../components/common/Card';
+import EventCard from '../../components/EventCard';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 
 const HomeScreen = ({ navigation }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
-  const handleLogout = async () => {
-    await logout();
+  // Fetch upcoming events (limit to 3)
+  const {
+    data: upcomingEvents = [],
+    isLoading: eventsLoading,
+    refetch: refetchEvents,
+    isRefetching: eventsRefetching,
+  } = useQuery({
+    queryKey: ['upcomingEvents', 'home'],
+    queryFn: async () => {
+      const response = await getUpcomingEvents();
+      if (response.success) {
+        return response.data.slice(0, 3); // Only first 3 events
+      }
+      return [];
+    },
+  });
+
+  // Fetch weather
+  const {
+    data: weather,
+    isLoading: weatherLoading,
+    refetch: refetchWeather,
+  } = useQuery({
+    queryKey: ['weather'],
+    queryFn: async () => {
+      const response = await getCurrentWeather();
+      if (response.success) return response.data;
+      return null;
+    },
+  });
+
+  // Fetch notifications count
+  const {
+    data: notifications = [],
+    refetch: refetchNotifications,
+  } = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: async () => {
+      const response = await getUserNotifications(user?.id);
+      if (response.success) return response.data;
+      return [];
+    },
+    enabled: !!user,
+  });
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const handleRefresh = async () => {
+    await Promise.all([refetchEvents(), refetchWeather(), refetchNotifications()]);
   };
+
+  const handleQuickAction = (screen) => {
+    navigation.navigate(screen);
+  };
+
+  if (eventsLoading && weatherLoading) {
+    return <LoadingSpinner fullScreen message="Loading..." />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={eventsRefetching}
+            onRefresh={handleRefresh}
+            colors={[colors.primary]}
+          />
+        }
+      >
+        {/* Header with Notification Bell */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>Welcome back,</Text>
-          <Text style={styles.userName}>{user?.firstName || user?.username || 'User'}!</Text>
+          <View>
+            <Text style={styles.greeting}>Welcome back,</Text>
+            <Text style={styles.userName}>{user?.firstName || user?.username || 'User'}!</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={() => navigation.navigate('Notifications')}
+          >
+            <Text style={styles.bellIcon}>🔔</Text>
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
 
-        {/* Quick Stats */}
-        <View style={styles.statsContainer}>
-          <Card style={styles.statCard}>
-            <Text style={styles.statValue}>🎓</Text>
-            <Text style={styles.statLabel}>Events</Text>
+        {/* Weather Widget */}
+        {weather && (
+          <Card style={styles.weatherCard}>
+            <View style={styles.weatherContent}>
+              <Text style={styles.weatherIcon}>
+                {weather.condition?.includes('cloud') ? '☁️' : '☀️'}
+              </Text>
+              <View style={styles.weatherInfo}>
+                <Text style={styles.weatherTemp}>
+                  {Math.round(weather.temperature || 0)}°C
+                </Text>
+                <Text style={styles.weatherCondition}>
+                  {weather.condition || 'Clear'}
+                </Text>
+                {weather.location && (
+                  <Text style={styles.weatherLocation}>📍 {weather.location}</Text>
+                )}
+              </View>
+            </View>
           </Card>
+        )}
 
-          <Card style={styles.statCard}>
-            <Text style={styles.statValue}>🏆</Text>
-            <Text style={styles.statLabel}>Achievements</Text>
-          </Card>
+        {/* Quick Actions */}
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.quickActionsContainer}>
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: colors.primary }]}
+            onPress={() => handleQuickAction('Events')}
+          >
+            <Text style={styles.actionIcon}>📅</Text>
+            <Text style={styles.actionLabel}>Events</Text>
+          </TouchableOpacity>
 
-          <Card style={styles.statCard}>
-            <Text style={styles.statValue}>📚</Text>
-            <Text style={styles.statLabel}>Books</Text>
-          </Card>
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: colors.secondary }]}
+            onPress={() => handleQuickAction('Achievements')}
+          >
+            <Text style={styles.actionIcon}>🏆</Text>
+            <Text style={styles.actionLabel}>Achievements</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: colors.accent }]}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Text style={styles.actionIcon}>📚</Text>
+            <Text style={styles.actionLabel}>Books</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: colors.info }]}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Text style={styles.actionIcon}>🔍</Text>
+            <Text style={styles.actionLabel}>Lost & Found</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Welcome Message */}
-        <Card style={styles.welcomeCard}>
-          <Text style={styles.welcomeTitle}>Smart University Mobile</Text>
-          <Text style={styles.welcomeText}>
-            Your campus companion is now in your pocket! Explore events, achievements, lost & found items, and more.
-          </Text>
-        </Card>
+        {/* Upcoming Events */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Upcoming Events</Text>
+          <TouchableOpacity onPress={() => handleQuickAction('Events')}>
+            <Text style={styles.seeAllText}>See All →</Text>
+          </TouchableOpacity>
+        </View>
 
-        {/* Coming Soon */}
-        <Card style={styles.comingSoonCard}>
-          <Text style={styles.comingSoonTitle}>🚧 Phase 2 Features Coming Soon</Text>
-          <Text style={styles.comingSoonText}>
-            • Events module with registration{'\n'}
-            • Achievements showcase{'\n'}
-            • Lost & Found{'\n'}
-            • Books exchange{'\n'}
-            • Real-time notifications{'\n'}
-            • And much more!
-          </Text>
-        </Card>
-
-        {/* User Info */}
-        <Card style={styles.userInfoCard}>
-          <Text style={styles.userInfoTitle}>Your Profile</Text>
-          <Text style={styles.userInfoText}>Username: {user?.username}</Text>
-          <Text style={styles.userInfoText}>Email: {user?.email}</Text>
-          <Text style={styles.userInfoText}>
-            Role: {user?.role?.charAt(0) + user?.role?.slice(1).toLowerCase()}
-          </Text>
-        </Card>
-
-        {/* Logout Button */}
-        <Button
-          title="Logout"
-          onPress={handleLogout}
-          variant="danger"
-          style={styles.logoutButton}
-        />
+        {upcomingEvents.length > 0 ? (
+          upcomingEvents.map((event) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              onPress={() => navigation.navigate('Events', {
+                screen: 'EventDetail',
+                params: { eventId: event.id },
+              })}
+            />
+          ))
+        ) : (
+          <Card style={styles.emptyCard}>
+            <Text style={styles.emptyIcon}>📅</Text>
+            <Text style={styles.emptyText}>No upcoming events</Text>
+          </Card>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -93,6 +203,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 24,
   },
   greeting: {
@@ -104,75 +217,121 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.bold,
     color: colors.text,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
+  notificationButton: {
+    position: 'relative',
+    padding: 8,
   },
-  statCard: {
-    flex: 1,
-    marginHorizontal: 4,
+  bellIcon: {
+    fontSize: 28,
+  },
+  badge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: colors.error,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.white,
+  },
+  weatherCard: {
+    marginBottom: 20,
     padding: 16,
+    backgroundColor: colors.primary + '15',
   },
-  statValue: {
-    fontSize: 32,
-    marginBottom: 8,
+  weatherContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  statLabel: {
+  weatherIcon: {
+    fontSize: 48,
+    marginRight: 16,
+  },
+  weatherInfo: {
+    flex: 1,
+  },
+  weatherTemp: {
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
+  },
+  weatherCondition: {
+    fontSize: typography.fontSize.base,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  weatherLocation: {
     fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
-    textAlign: 'center',
   },
-  welcomeCard: {
-    marginBottom: 16,
-    padding: 20,
-  },
-  welcomeTitle: {
+  sectionTitle: {
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.bold,
+    color: colors.text,
+    marginBottom: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    marginTop: 20,
+  },
+  seeAllText: {
+    fontSize: typography.fontSize.base,
     color: colors.primary,
-    marginBottom: 12,
-  },
-  welcomeText: {
-    fontSize: typography.fontSize.base,
-    color: colors.textSecondary,
-    lineHeight: 24,
-  },
-  comingSoonCard: {
-    marginBottom: 16,
-    padding: 20,
-    backgroundColor: colors.gray50,
-  },
-  comingSoonTitle: {
-    fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.semiBold,
-    color: colors.text,
+  },
+  quickActionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 20,
+  },
+  actionCard: {
+    width: '48%',
+    aspectRatio: 1.5,
+    borderRadius: 12,
+    padding: 16,
+    marginRight: '2%',
     marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
-  comingSoonText: {
+  actionIcon: {
+    fontSize: 36,
+    marginBottom: 8,
+  },
+  actionLabel: {
     fontSize: typography.fontSize.base,
-    color: colors.textSecondary,
-    lineHeight: 24,
-  },
-  userInfoCard: {
-    marginBottom: 16,
-    padding: 20,
-  },
-  userInfoTitle: {
-    fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.semiBold,
-    color: colors.text,
+    color: colors.white,
+  },
+  emptyCard: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  emptyIcon: {
+    fontSize: 48,
     marginBottom: 12,
   },
-  userInfoText: {
+  emptyText: {
     fontSize: typography.fontSize.base,
     color: colors.textSecondary,
-    marginBottom: 6,
-  },
-  logoutButton: {
-    marginTop: 8,
-    marginBottom: 24,
   },
 });
 
