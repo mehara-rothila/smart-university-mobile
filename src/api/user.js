@@ -69,6 +69,29 @@ export const uploadProfileImage = async (imageFile) => {
 };
 
 /**
+ * Update profile image with FormData
+ * @param {FormData} formData - FormData with image
+ * @returns {Promise} - Response with image URL
+ */
+export const updateProfileImage = async (formData) => {
+  try {
+    const response = await apiClient.post('/user/profile/image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return {
+      success: true,
+      data: response.data,
+      message: 'Profile image updated successfully',
+    };
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+/**
  * Delete profile image
  * @returns {Promise} - Success/failure response
  */

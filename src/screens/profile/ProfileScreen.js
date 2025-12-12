@@ -14,6 +14,10 @@ const ProfileScreen = ({ navigation }) => {
     await logout();
   };
 
+  const handleEditProfile = () => {
+    navigation.navigate('EditProfile');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -78,25 +82,12 @@ const ProfileScreen = ({ navigation }) => {
           )}
         </Card>
 
-        {/* Coming Soon */}
-        <Card style={styles.comingSoonCard}>
-          <Text style={styles.comingSoonTitle}>🚧 Coming Soon</Text>
-          <Text style={styles.comingSoonText}>
-            • Edit profile{'\n'}
-            • Upload profile picture{'\n'}
-            • Change password{'\n'}
-            • Notification preferences{'\n'}
-            • Activity history
-          </Text>
-        </Card>
-
         {/* Actions */}
         <View style={styles.actionsContainer}>
           <Button
-            title="Edit Profile (Coming Soon)"
-            onPress={() => {}}
+            title="Edit Profile"
+            onPress={handleEditProfile}
             variant="outline"
-            disabled={true}
             style={styles.actionButton}
           />
 

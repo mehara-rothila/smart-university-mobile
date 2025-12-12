@@ -4,7 +4,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/home/HomeScreen';
 import EventsNavigator from './EventsNavigator';
 import AchievementsNavigator from './AchievementsNavigator';
-import ProfileScreen from '../screens/profile/ProfileScreen';
+import LostFoundNavigator from './LostFoundNavigator';
+import BooksNavigator from './BooksNavigator';
+import ProfileNavigator from './ProfileNavigator';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 
@@ -30,7 +32,7 @@ const MainTabNavigator = () => {
           height: 60,
         },
         tabBarLabelStyle: {
-          fontSize: typography.fontSize.sm,
+          fontSize: typography.fontSize.xs,
           fontWeight: typography.fontWeight.medium,
         },
       }}
@@ -66,6 +68,28 @@ const MainTabNavigator = () => {
       />
 
       <Tab.Screen
+        name="LostFound"
+        component={LostFoundNavigator}
+        options={{
+          title: 'Lost & Found',
+          tabBarIcon: ({ color, size }) => (
+            <Text style={{ fontSize: size, color }}>🔍</Text>
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="Books"
+        component={BooksNavigator}
+        options={{
+          title: 'Books',
+          tabBarIcon: ({ color, size }) => (
+            <Text style={{ fontSize: size, color }}>📚</Text>
+          ),
+        }}
+      />
+
+      <Tab.Screen
         name="Achievements"
         component={AchievementsNavigator}
         options={{
@@ -77,18 +101,10 @@ const MainTabNavigator = () => {
       />
 
       <Tab.Screen
-        name="ProfileTab"
-        component={ProfileScreen}
+        name="Profile"
+        component={ProfileNavigator}
         options={{
           title: 'Profile',
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: colors.primary,
-          },
-          headerTintColor: colors.white,
-          headerTitleStyle: {
-            fontWeight: typography.fontWeight.semiBold,
-          },
           tabBarIcon: ({ color, size }) => (
             <Text style={{ fontSize: size, color }}>👤</Text>
           ),

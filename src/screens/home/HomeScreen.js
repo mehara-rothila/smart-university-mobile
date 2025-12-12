@@ -149,7 +149,7 @@ const HomeScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={[styles.actionCard, { backgroundColor: colors.accent }]}
-            onPress={() => navigation.navigate('Profile')}
+            onPress={() => handleQuickAction('Books')}
           >
             <Text style={styles.actionIcon}>📚</Text>
             <Text style={styles.actionLabel}>Books</Text>
@@ -157,7 +157,7 @@ const HomeScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={[styles.actionCard, { backgroundColor: colors.info }]}
-            onPress={() => navigation.navigate('Profile')}
+            onPress={() => handleQuickAction('LostFound')}
           >
             <Text style={styles.actionIcon}>🔍</Text>
             <Text style={styles.actionLabel}>Lost & Found</Text>
